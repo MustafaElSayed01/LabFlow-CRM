@@ -19,7 +19,7 @@ function t(string $key): string
 
 function site_url(string $path = ''): string
 {
-    $base = rtrim(getenv('APP_URL') ?: '', '/');
+    $base = rtrim(app_env('APP_URL') ?: '', '/');
     return $base === '' ? $path : $base . ($path !== '' ? '/' . ltrim($path, '/') : '');
 }
 
@@ -61,9 +61,9 @@ function safe_hex(mixed $value, string $fallback): string
 function site_settings(): array
 {
     $settings = [
-        'lab_name' => getenv('SITE_NAME') ?: 'LabFlow', 'about' => null,
-        'logo_path' => getenv('SITE_LOGO') ?: 'assets/images/logo.jpeg',
-        'favicon_path' => getenv('SITE_FAVICON') ?: 'assets/images/favicon.svg',
+        'lab_name' => app_env('SITE_NAME') ?: 'LabFlow', 'about' => null,
+        'logo_path' => app_env('SITE_LOGO') ?: 'assets/images/logo.jpeg',
+        'favicon_path' => app_env('SITE_FAVICON') ?: 'assets/images/favicon.svg',
         'phone_number' => null, 'whatsapp_number' => null, 'email' => null,
         'address' => null, 'google_map_link' => null, 'working_hours' => null,
         'facebook_url' => null, 'instagram_url' => null, 'youtube_url' => null, 'tiktok_url' => null,

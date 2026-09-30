@@ -1,29 +1,16 @@
 <?php
 declare(strict_types=1);
 
-function load_env_file(string $path): void
-{
-    if (!is_file($path) || !is_readable($path)) {
-        return;
-    }
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-    foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
-        $line = trim($line);
-        if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) {
-            continue;
-        }
-        [$name, $value] = explode('=', $line, 2);
-        $name = trim($name);
-        $value = trim($value);
-        if ($name !== '' && getenv($name) === false) {
-            putenv($name . '=' . trim($value, " \t\n\r\0\x0B\"'"));
-            $_ENV[$name] = trim($value, " \t\n\r\0\x0B\"'");
-        }
-    }
+function app_env(string $key, ?string $default = null): ?string
+{
+    $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+    return $value === false || $value === null ? $default : (string) $value;
 }
 
-load_env_file(dirname(__DIR__) . '/.env');
-date_default_timezone_set(getenv('APP_TIMEZONE') ?: 'Africa/Cairo');
+\Dotenv\Dotenv::createImmutable(dirname(__DIR__))->safeLoad();
+date_default_timezone_set(app_env('APP_TIMEZONE') ?: 'Africa/Cairo');
 
 const DEFAULT_THEME = [
     'primary_light' => '#174f7d',

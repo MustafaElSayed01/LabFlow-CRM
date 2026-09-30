@@ -5,9 +5,10 @@ Arabic-first public website starter for PHP 8.5, procedural PHP, MySQLi, Bootstr
 ## Setup
 
 1. Copy `.env.example` to `.env` and enter the database connection values.
-2. Import the existing SQL files in dependency order, then import `sql/theme_settings.sql` once the database has been created. The theme file inserts the starter palette row.
-3. Configure the web server to use `index.php` as its directory index. For a subdirectory install, set `APP_URL` in `.env` to that URL path.
-4. Populate `lab_settings`, campaigns, branches, campaign-to-branch links, and branch working hours in the database.
+2. Run `composer install` to install `vlucas/phpdotenv` from `composer.lock`.
+3. Import the existing SQL files in dependency order, then import `sql/theme_settings.sql` once the database has been created. The theme file inserts the starter palette row.
+4. Configure the web server to use `index.php` as its directory index. For a subdirectory install, set `APP_URL` in `.env` to that URL path.
+5. Populate `lab_settings`, campaigns, branches, campaign-to-branch links, and branch working hours in the database.
 
 ## Per-site branding
 

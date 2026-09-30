@@ -10,11 +10,11 @@ function db(): mysqli
         return $connection;
     }
     $connection = new mysqli(
-        getenv('DB_HOST') ?: '127.0.0.1',
-        getenv('DB_USER') ?: 'root',
-        getenv('DB_PASSWORD') ?: '',
-        getenv('DB_NAME') ?: 'labflow_crm',
-        (int) (getenv('DB_PORT') ?: 3306)
+        app_env('DB_HOST') ?: '127.0.0.1',
+        app_env('DB_USER') ?: 'root',
+        app_env('DB_PASSWORD') ?: '',
+        app_env('DB_NAME') ?: 'labflow_crm',
+        (int) (app_env('DB_PORT') ?: 3306)
     );
     $connection->set_charset('utf8mb4');
     return $connection;
