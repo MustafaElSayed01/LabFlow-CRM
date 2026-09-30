@@ -1,1 +1,7 @@
 *.sql
+!sql/theme_settings.sql
+.env
+.env.*
+!.env.example
+/vendor/
+/storage/logs/
