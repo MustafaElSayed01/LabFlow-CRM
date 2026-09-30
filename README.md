@@ -8,7 +8,7 @@ Arabic-first public website starter for PHP 8.5, procedural PHP, MySQLi, Bootstr
 2. Run `composer install` to install `vlucas/phpdotenv` from `composer.lock`.
 3. Import the existing SQL files in dependency order, then import `sql/theme_settings.sql` once the database has been created. The theme file inserts the starter palette row.
 4. Configure the web server to use `index.php` as its directory index. For a subdirectory install, set `APP_URL` in `.env` to that URL path.
-5. Populate `lab_settings`, campaigns, branches, campaign-to-branch links, and branch working hours in the database.
+5. Populate `lab_settings`, campaigns, branches, and campaign-to-branch links in the database.
 
 ## Per-site branding
 
@@ -19,6 +19,4 @@ Arabic-first public website starter for PHP 8.5, procedural PHP, MySQLi, Bootstr
 
 ## Booking behavior
 
-Bookings create or reuse a patient by phone number, create a pending reservation, and add a reservation-history entry in one transaction. A branch needs a `campaign_branches` link to the chosen campaign. When a branch has a `branch_working_hours` row for the requested weekday, the selected time must fall within those hours. Unique schema constraints prevent duplicate active patient/campaign reservations and occupied branch/date/time slots.
-
-`branch_working_hours.weekday` uses MySQL `WEEKDAY()` values (Monday `0` through Sunday `6`). If a weekday has no hours row, booking time is not restricted by a schedule.
+The home page contains the campaign and branch sections and the reservation form. Campaign tags send the selected campaign ID. If that campaign has several linked branches, the visitor must select one; a single linked branch is assigned automatically. Bookings create or reuse a patient by phone number, create a pending reservation without a date/time, and add a reservation-history entry in one transaction. Unique schema constraints prevent a patient from having more than one active reservation for the same campaign.

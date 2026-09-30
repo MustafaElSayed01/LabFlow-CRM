@@ -159,22 +159,6 @@ function branch_is_in_campaign(mysqli $connection, int $campaignId, int $branchI
     return (bool) $stmt->get_result()->fetch_row();
 }
 
-function branch_schedule_allows(mysqli $connection, int $branchId, string $date, string $time): bool
-{
-    $stmt = $connection->prepare('SELECT open_time, close_time, is_closed FROM branch_working_hours WHERE branch_id = ? AND weekday = WEEKDAY(?) LIMIT 1');
-    $stmt->bind_param('is', $branchId, $date);
-    $stmt->execute();
-    $hours = $stmt->get_result()->fetch_assoc();
-    if (!$hours) {
-        return true;
-    }
-    return (int) $hours['is_closed'] === 0
-        && $hours['open_time'] !== null
-        && $hours['close_time'] !== null
-        && $time >= substr((string) $hours['open_time'], 0, 5)
-        && $time < substr((string) $hours['close_time'], 0, 5);
-}
-
 function submit_public_booking(array $input): string
 {
     $connection = db();
@@ -186,33 +170,18 @@ function submit_public_booking(array $input): string
         '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
     ]);
     $phone = preg_replace('/[^0-9+]/', '', $phoneInput);
-    $email = trim(request_string($input, 'email'));
-    $notes = trim(request_string($input, 'notes'));
     $campaignId = filter_var(request_string($input, 'campaign_id'), FILTER_VALIDATE_INT) ?: 0;
     $branchId = filter_var(request_string($input, 'branch_id'), FILTER_VALIDATE_INT) ?: 0;
-    $date = request_string($input, 'reservation_date');
-    $time = request_string($input, 'reservation_time');
 
-    if ($name === '' || mb_strlen($name) > 200 || mb_strlen($notes) > 2000) {
+    if ($name === '' || mb_strlen($name) > 200 || $branchId < 0) {
         return 'invalid';
+    }
+    if ($campaignId < 1) {
+        return 'campaign_required';
     }
     if (!preg_match('/^\+?[0-9]{7,19}$/', $phone)) {
         return 'phone';
     }
-    if ($email !== '' && (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 254)) {
-        return 'invalid';
-    }
-    $dateObject = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
-    if (!$dateObject || $dateObject->format('Y-m-d') !== $date || $date < date('Y-m-d')) {
-        return 'date';
-    }
-    if (!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $time) || $campaignId < 1 || $branchId < 1) {
-        return 'invalid';
-    }
-    if (new DateTimeImmutable($date . ' ' . $time, new DateTimeZone(date_default_timezone_get())) < new DateTimeImmutable('now')) {
-        return 'date';
-    }
-
     try {
         $connection->begin_transaction();
         $campaign = campaign_is_open($connection, $campaignId, true);
@@ -220,13 +189,18 @@ function submit_public_booking(array $input): string
             $connection->rollback();
             return 'campaign';
         }
-        if (!branch_is_in_campaign($connection, $campaignId, $branchId)) {
+
+        $availableBranches = campaign_branches($campaignId);
+        if (count($availableBranches) === 1) {
+            $branchId = (int) $availableBranches[0]['id'];
+        } elseif (count($availableBranches) > 1 && $branchId < 1) {
+            $connection->rollback();
+            return 'branch_required';
+        } elseif (count($availableBranches) === 0) {
+            $branchId = 0;
+        } elseif (!branch_is_in_campaign($connection, $campaignId, $branchId)) {
             $connection->rollback();
             return 'branch';
-        }
-        if (!branch_schedule_allows($connection, $branchId, $date, $time)) {
-            $connection->rollback();
-            return 'hours';
         }
 
         $patientStmt = $connection->prepare('SELECT id FROM patients WHERE phone_number = ? AND deleted_at IS NULL LIMIT 1');
@@ -235,9 +209,6 @@ function submit_public_booking(array $input): string
         $patient = $patientStmt->get_result()->fetch_assoc();
         if ($patient) {
             $patientId = (int) $patient['id'];
-            $consent = $connection->prepare('UPDATE patients SET consent_given_at = NOW() WHERE id = ?');
-            $consent->bind_param('i', $patientId);
-            $consent->execute();
         } else {
             $prefix = $connection->query('SELECT patient_prefix FROM lab_settings ORDER BY id ASC LIMIT 1')->fetch_assoc()['patient_prefix'] ?? 'PAT';
             $prefix = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $prefix) ?: 'PAT';
@@ -246,27 +217,30 @@ function submit_public_booking(array $input): string
                 throw new RuntimeException('patient_sequence_missing');
             }
             $code = $prefix . '-' . str_pad((string) $connection->insert_id, 6, '0', STR_PAD_LEFT);
-            $emailValue = $email !== '' ? $email : null;
-            $insertPatient = $connection->prepare('INSERT INTO patients (code, name, phone_number, email, consent_given_at) VALUES (?, ?, ?, ?, NOW())');
-            $insertPatient->bind_param('ssss', $code, $name, $phone, $emailValue);
+            $insertPatient = $connection->prepare('INSERT INTO patients (code, name, phone_number) VALUES (?, ?, ?)');
+            $insertPatient->bind_param('sss', $code, $name, $phone);
             $insertPatient->execute();
             $patientId = (int) $connection->insert_id;
         }
 
-        $status = 'pending';
-        $insertReservation = $connection->prepare('INSERT INTO reservations (patient_id, campaign_id, branch_id, reservation_date, reservation_time, status, patient_note) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $insertReservation->bind_param('iiissss', $patientId, $campaignId, $branchId, $date, $time, $status, $notes);
+        if ($branchId > 0) {
+            $insertReservation = $connection->prepare("INSERT INTO reservations (patient_id, campaign_id, branch_id, status) VALUES (?, ?, ?, 'pending')");
+            $insertReservation->bind_param('iii', $patientId, $campaignId, $branchId);
+        } else {
+            $insertReservation = $connection->prepare("INSERT INTO reservations (patient_id, campaign_id, branch_id, status) VALUES (?, ?, NULL, 'pending')");
+            $insertReservation->bind_param('ii', $patientId, $campaignId);
+        }
         $insertReservation->execute();
         $reservationId = (int) $connection->insert_id;
-        $history = $connection->prepare("INSERT INTO reservation_history (reservation_id, action, new_date, new_time, new_status) VALUES (?, 'created', ?, ?, 'pending')");
-        $history->bind_param('iss', $reservationId, $date, $time);
+        $history = $connection->prepare("INSERT INTO reservation_history (reservation_id, action, new_status) VALUES (?, 'created', 'pending')");
+        $history->bind_param('i', $reservationId);
         $history->execute();
         $connection->commit();
         return 'success';
     } catch (mysqli_sql_exception $exception) {
         $connection->rollback();
         if ($exception->getCode() === 1062) {
-            return str_contains($exception->getMessage(), 'active_patient_campaign') ? 'duplicate' : 'slot';
+            return str_contains($exception->getMessage(), 'active_patient_campaign') ? 'duplicate' : 'error';
         }
         return 'error';
     } catch (Throwable) {

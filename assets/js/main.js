@@ -17,22 +17,62 @@
         });
     });
 
-    const campaignSelect = document.getElementById('campaign-id');
-    const branchSelect = document.getElementById('branch-id');
+    const campaignInput = document.getElementById('selected-campaign-id');
+    const campaignTags = document.querySelectorAll('[data-campaign-id]');
+    const branchSelect = document.getElementById('branch-select');
+    const branchPicker = document.getElementById('branch-picker');
+    const singleBranchInput = document.getElementById('single-branch-id');
     const branchData = document.getElementById('campaign-branch-data');
-    if (campaignSelect && branchSelect && branchData) {
+    const campaignFeedback = document.querySelector('.campaign-validation');
+    if (campaignInput && branchSelect && branchPicker && singleBranchInput && branchData) {
         let options = {};
         try { options = JSON.parse(branchData.textContent || '{}'); } catch (_) { options = {}; }
         const placeholder = branchSelect.options[0]?.textContent || '';
-        const renderBranches = (selected = '') => {
+        const renderBranches = (campaignId, selected = '') => {
+            const branches = options[campaignId] || [];
             branchSelect.replaceChildren(new Option(placeholder, ''));
-            (options[campaignSelect.value] || []).forEach((branch) => {
+            branches.forEach((branch) => {
                 branchSelect.add(new Option(branch.name, branch.id, false, String(branch.id) === String(selected)));
             });
-            branchSelect.disabled = !campaignSelect.value || !(options[campaignSelect.value] || []).length;
+            branchPicker.hidden = branches.length < 2;
+            branchSelect.disabled = branches.length < 2;
+            branchSelect.required = branches.length > 1;
+            if (branches.length > 1) {
+                branchSelect.name = 'branch_id';
+                singleBranchInput.removeAttribute('name');
+                singleBranchInput.value = '';
+            } else {
+                branchSelect.removeAttribute('name');
+                singleBranchInput.value = branches.length === 1 ? String(branches[0].id) : '';
+                if (branches.length === 1) singleBranchInput.name = 'branch_id';
+                else singleBranchInput.removeAttribute('name');
+            }
         };
-        campaignSelect.addEventListener('change', () => renderBranches(''));
-        renderBranches(branchSelect.dataset.selectedBranch || branchSelect.value);
+        const selectCampaign = (campaignId, selectedBranch = '') => {
+            campaignInput.value = String(campaignId || '');
+            campaignTags.forEach((tag) => {
+                const selected = tag.dataset.campaignId === String(campaignId);
+                tag.classList.toggle('is-selected', selected);
+                tag.setAttribute('aria-pressed', selected ? 'true' : 'false');
+            });
+            if (campaignFeedback) campaignFeedback.classList.remove('is-visible');
+            renderBranches(String(campaignId || ''), selectedBranch);
+        };
+        campaignTags.forEach((tag) => tag.addEventListener('click', () => selectCampaign(tag.dataset.campaignId)));
+        document.querySelectorAll('[data-campaign-select]').forEach((link) => {
+            link.addEventListener('click', () => selectCampaign(link.dataset.campaignSelect));
+        });
+        selectCampaign(campaignInput.value, branchSelect.dataset.selectedBranch || '');
+
+        const bookingForm = document.querySelector('#booking form');
+        if (bookingForm) bookingForm.addEventListener('submit', (event) => {
+            if (!campaignInput.value) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (campaignFeedback) campaignFeedback.classList.add('is-visible');
+                campaignTags[0]?.focus();
+            }
+        }, true);
     }
 
     document.querySelectorAll('.needs-validation').forEach((form) => form.addEventListener('submit', (event) => {

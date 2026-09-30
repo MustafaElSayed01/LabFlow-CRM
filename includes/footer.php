@@ -10,9 +10,9 @@
             <div class="col-6 col-lg-3">
                 <h2 class="footer-heading"><?= e(t('menu')) ?></h2>
                 <a class="footer-link"
-                    href="<?= e(site_url('index.php?page=campaigns')) ?>"><?= e(t('campaigns')) ?></a>
-                <a class="footer-link" href="<?= e(site_url('index.php?page=branches')) ?>"><?= e(t('branches')) ?></a>
-                <a class="footer-link" href="<?= e(site_url('index.php?page=booking')) ?>"><?= e(t('book')) ?></a>
+                    href="#campaigns"><?= e(t('campaigns')) ?></a>
+                <a class="footer-link" href="#branches"><?= e(t('branches')) ?></a>
+                <a class="footer-link" href="#booking"><?= e(t('book')) ?></a>
             </div>
             <div class="col-6 col-lg-4">
                 <h2 class="footer-heading"><?= e(t('contact')) ?></h2>

@@ -4,13 +4,7 @@ $logoPath = (string) $siteSettings['logo_path'];
 $faviconPath = (string) $siteSettings['favicon_path'];
 $brandLogo = preg_match('~^https?://~i', $logoPath) || preg_match('~^/(?!/)~', $logoPath) ? $logoPath : asset($logoPath);
 $brandFavicon = preg_match('~^https?://~i', $faviconPath) || preg_match('~^/(?!/)~', $faviconPath) ? $faviconPath : asset($faviconPath);
-$languageParams = ['lang' => $language === 'ar' ? 'en' : 'ar', 'page' => request_string($_GET, 'page') ?: 'home'];
-foreach (['id', 'campaign'] as $preservedParameter) {
-    $parameterValue = request_string($_GET, $preservedParameter);
-    if ($parameterValue !== '' && ctype_digit($parameterValue)) {
-        $languageParams[$preservedParameter] = (int) $parameterValue;
-    }
-}
+$languageParams = ['lang' => $language === 'ar' ? 'en' : 'ar'];
 ?>
 <!doctype html>
 <html lang="<?= e($language) ?>" dir="<?= $isRtl ? 'rtl' : 'ltr' ?>">
@@ -38,7 +32,7 @@ foreach (['id', 'campaign'] as $preservedParameter) {
     <header class="site-header">
         <nav class="navbar navbar-expand-lg" aria-label="<?= e(t('menu')) ?>">
             <div class="container">
-                <a class="navbar-brand brand-lockup" href="<?= e(site_url('index.php')) ?>"
+                <a class="navbar-brand brand-lockup" href="#home"
                     aria-label="<?= e($siteSettings['lab_name']) ?>">
                     <img src="<?= e($brandLogo) ?>" alt="<?= e($siteSettings['lab_name']) ?>" class="brand-logo">
                 </a>
@@ -49,14 +43,14 @@ foreach (['id', 'campaign'] as $preservedParameter) {
                 <div class="collapse navbar-collapse" id="siteNavigation">
                     <ul class="navbar-nav mx-auto gap-lg-2">
                         <li class="nav-item"><a class="nav-link"
-                                href="<?= e(site_url('index.php')) ?>"><?= e(t('home')) ?></a></li>
+                                href="#home"><?= e(t('home')) ?></a></li>
                         <li class="nav-item"><a class="nav-link"
-                                href="<?= e(site_url('index.php?page=campaigns')) ?>"><?= e(t('campaigns')) ?></a></li>
+                                href="#campaigns"><?= e(t('campaigns')) ?></a></li>
                         <li class="nav-item"><a class="nav-link"
-                                href="<?= e(site_url('index.php?page=branches')) ?>"><?= e(t('branches')) ?></a></li>
+                                href="#branches"><?= e(t('branches')) ?></a></li>
                     </ul>
                     <div class="d-flex align-items-center gap-2 nav-actions">
-                        <a class="btn btn-primary btn-sm px-3" href="<?= e(site_url('index.php?page=booking')) ?>"><i
+                        <a class="btn btn-primary btn-sm px-3" href="#booking"><i
                                 class="fa-solid fa-calendar-check me-1" aria-hidden="true"></i><?= e(t('book')) ?></a>
                         <button class="btn btn-icon" type="button" data-theme-toggle aria-label="<?= e(t('theme')) ?>"
                             title="<?= e(t('theme')) ?>"><i class="fa-solid fa-moon" aria-hidden="true"></i></button>
