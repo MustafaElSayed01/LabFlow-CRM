@@ -32,8 +32,7 @@ $languageParams = ['lang' => $language === 'ar' ? 'en' : 'ar'];
     <header class="site-header">
         <nav class="navbar navbar-expand-lg" aria-label="<?= e(t('menu')) ?>">
             <div class="container">
-                <a class="navbar-brand brand-lockup" href="#home"
-                    aria-label="<?= e($siteSettings['lab_name']) ?>">
+                <a class="navbar-brand brand-lockup" href="#home" aria-label="<?= e($siteSettings['lab_name']) ?>">
                     <img src="<?= e($brandLogo) ?>" alt="<?= e($siteSettings['lab_name']) ?>" class="brand-logo">
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavigation"
@@ -42,12 +41,9 @@ $languageParams = ['lang' => $language === 'ar' ? 'en' : 'ar'];
                 </button>
                 <div class="collapse navbar-collapse" id="siteNavigation">
                     <ul class="navbar-nav mx-auto gap-lg-2">
-                        <li class="nav-item"><a class="nav-link"
-                                href="#home"><?= e(t('home')) ?></a></li>
-                        <li class="nav-item"><a class="nav-link"
-                                href="#campaigns"><?= e(t('campaigns')) ?></a></li>
-                        <li class="nav-item"><a class="nav-link"
-                                href="#branches"><?= e(t('branches')) ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#home"><?= e(t('home')) ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#campaigns"><?= e(t('campaigns')) ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#branches"><?= e(t('branches')) ?></a></li>
                     </ul>
                     <div class="d-flex align-items-center gap-2 nav-actions">
                         <a class="btn btn-primary btn-sm px-3" href="#booking"><i

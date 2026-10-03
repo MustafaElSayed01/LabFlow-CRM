@@ -9,6 +9,14 @@ Arabic-first public website starter for PHP 8.5, procedural PHP, MySQLi, Bootstr
 3. Import the existing SQL files in dependency order, then import `sql/theme_settings.sql` once the database has been created. The theme file inserts the starter palette row.
 4. Configure the web server to use `index.php` as its directory index. For a subdirectory install, set `APP_URL` in `.env` to that URL path.
 5. Populate `lab_settings`, campaigns, branches, and campaign-to-branch links in the database.
+6. Set `ADMIN_SETUP_KEY` in `.env` to a private random value of at least 32 characters, then visit `/admin/setup.php` to create the first super admin. The setup page locks after a super admin exists. Sign in at `/admin/login.php`.
+
+## Administration
+
+- Super admins manage accounts, roles, receptionist branch assignments, banners, staff, campaigns, branches, site branding, and the light/dark palette.
+- Admins can manage site content and edit existing accounts, but cannot create accounts or change roles and branch assignments.
+- Receptionists can view and update reservations and form submissions only for their active `branch_staff` assignments. They cannot manage site content or accounts.
+- All admin changes use CSRF-protected POST forms. Account passwords are stored as PHP password hashes; audit events are written to `audit_logs`.
 
 ## Per-site branding
 
